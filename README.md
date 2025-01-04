@@ -1,215 +1,37 @@
-# bb-external-editor
+# Bitburner Scripts
 
-This is a template for using any external editor for Bitburner. This Template supports JS, JSX, TS and TSX out of the box.
+This utilizes Shyguy1412's bb-external-script editor for the file watcher & monitoring each script file's RAM usage. I highly recommend using it for Bitburner script development, check out their [repo](https://github.com/shyguy1412/bb-external-editor)!
 
-## How to get started
+## Script database
 
-### Cloning this Repo
+### [Basic Deploy](https://github.com/derrickdryer/bitburner-scripts/servers/home/basic-deploy.js)
 
-1. If you dont already have it installed, install [NodeJS](https://nodejs.org) v20 or newer
-1. Clone this repository `git clone https://github.com/shyguy1412/bb-external-editor`
-1. navigate to the template inside your console `cd bb-external-editor`
-1. run `npm install` in your console to install all dependencies
-1. run `npm start` in your console to start the RemoteAPI server
-1. open Bitburner and navigate to the settings
-1. open the tab labeled 'Remote API' and enter the port '12525'
-1. press connect
+- **Required RAM:** 7.7GB
+- *Recommended Alias Command:* `alias get-money="run /path/to/script/basic-deploy.js"`
+- *Usage:* `get-money [optional: target (default: n00dles)]`
 
-### Docker
+This script is a very basic deploy script. Within the script you specify the servers to deploy to, as well at the script you wish to deploy. Then simply run the script with the optional target argument, otherwise it will just fall back to attacking poor `n00dles`.
 
-1. Pull the image `docker pull shyguy1412/bb-external-editor:latest`
-1. Create a folder for your scripts `mkdir scripts`
-1. Create the container `docker create --name bb-external-editor -p 12525:12525 -v ./scripts:/bb-external-editor/servers shyguy1412/bb-external-editor:latest`
-1. Start the container `docker start bb-external-editor`
+### [Basic Hack](https://github.com/derrickdryer/bitburner-scripts/servers/home/basic-hack.js)
 
-## File Hierarchy
+- **Required RAM:** 2.45GB
+- *Recommended Alias Command:* `alias attack="run /path/to/script/basic-hack.js"`
+- *Usage:* `hack [optional: target (default: n00dles)]`
 
-The destination server of your scripts is determined by their file hierarchy. The file hierarchy consists of a basepath (default `/servers`), a server name and the script path.  
-This means a file with the path `servers/home/lib/utils.ts` will be placed on the home server, in the lib folder as utils.js while a file with the path `servers/pserv-1/hack.ts` would be placed on pserv-1 as `hack.js`.  
-If a server does not exist a warning will be printed to the console.
+This is a very basic hacking script that you can also obtain during the beginner tutorial. This however has some small adjustments such as adding to the security level and lowering the Max Money target. Last it has a default target of `n00dles`, if one is not specified in the arguments. This works very well in conjunction with the basic deploy script.
 
-Now any changes made to scripts inside the server folders will automatically be uploaded to Bitburner.
+### Buy Servers
 
-For more in-depth details and a full list of options have a look at the [plugin](https://github.com/shyguy1412/esbuild-bitburner-plugin) powering this template!
+- **Required RAM:** 4.25GB
+- *Recommended Alias Command:* `alias buy-servers="run /path/to/script/buy-servers.js"`
+- *Usage:* `buy-servers`
 
-## Features
+A simple mass server purchase script with some prompts. It will prompt for the wanted RAM, how much money you wish to have in reserve and will auto-buy as money comes available. All servers will be named `pserv-#`.
 
-### esbuild
+### Max Execute
 
-This template uses [esbuild](https://esbuild.github.io/) to bundle your scripts.
+- **Required RAM:** 1.75GB
+- *Recommended Alias Command:* `alias maxExec="run /path/to/script/maxExec.js"`
+- *Usage:* `maxExec [req: /path/to/script/Script.js]`
 
-### Using React
-
-This template allows you to use the ingame instances of `React` and `ReactDOM` simply by importing them as ESModule as you usually would.
-
-```jsx
-import React, {useState} from 'react';
-
-export function MyComponent(){
-  const [count, setCount] = useState(0);
-
-  return <div>Count {count} <button onClick={() => setCount(count + 1)}>Add to count</button></div>;
-}
-
-```
-
-### Developing on multiple servers
-
-Simply create a new folder with the name of the server you want to develop on in the 'servers' directory to start developing on that server!
-
-### Bidirectional Mirroring
-
-You can enable mirroring like this  
-
-```js
-const createContext = async () => await context({
-  entryPoints: [
-    'servers/**/*.js',
-    'servers/**/*.jsx',
-    'servers/**/*.ts',
-    'servers/**/*.tsx',
-  ],
-  outbase: "./servers",
-  outdir: "./build",
-  plugins: [BitburnerPlugin({
-    port: 12525,
-    types: 'NetscriptDefinitions.d.ts',
-    mirror: {
-      'local/path': ['home', 'and/or other servers']
-    }
-  })],
-  bundle: true,
-  format: 'esm',
-  platform: 'browser',
-  logLevel: 'info'
-});
-
-let ctx = await createContext();
-ctx.watch();
-```
-
-This will mirror all listed servers for a path to a specified location.
-While mirroring, all changes in the game will be synced with your editor and vice versa.
-
-### Automatic Distribution
-
-You can specify folders with a list of servers to automatically distribute your files to these servers like this:
-
-```js
-const createContext = async () => await context({
-  entryPoints: [
-    'servers/**/*.js',
-    'servers/**/*.jsx',
-    'servers/**/*.ts',
-    'servers/**/*.tsx',
-  ],
-  outbase: "./servers",
-  outdir: "./build",
-  plugins: [BitburnerPlugin({
-    port: 12525,
-    types: 'NetscriptDefinitions.d.ts',
-    distribute: {
-      'build/home/dist': ['server-1', 'server-2', 'server-3']
-    }
-  })],
-  bundle: true,
-  format: 'esm',
-  platform: 'browser',
-  logLevel: 'info'
-});
-
-let ctx = await createContext();
-ctx.watch();
-
-```
-
-In this example all files that are developed in 'servers/home/dist' will not only be uploaded to 'home' but also 'server-1', 'server-2' and 'server-3'.
-
-### Plugin Extensions
-
-You can provide plugin extensions with hooks that trigger before and after certain events. Within hooks that gurantee that the plugin is connected to the game, you also get full access to the remote file API. Using extensions would look something like this:
-
-```js
-import { context } from 'esbuild';
-import { BitburnerPlugin } from 'esbuild-bitburner-plugin';
-
-/** @type import('esbuild-bitburner-plugin').PluginExtension*/
-const customExtension = {
-  setup() { console.log('setup'); }, //Run once on plugin startup
-
-  beforeConnect() { console.log('beforeConnect'); }, //Run once before the game connects
-  afterConnect(remoteAPI) { console.log('afterConnect'); }, //Run every time after the game (re)connects
-
-  beforeBuild() { console.log('beforeBuild'); }, //Run before every build process
-  afterBuild(remoteAPI) { console.log('afterBuild'); }, //Run after build results have been uploaded into the game
-};
-
-const createContext = async () => await context({
-  entryPoints: [
-    'servers/**/*.js',
-    'servers/**/*.jsx',
-    'servers/**/*.ts',
-    'servers/**/*.tsx',
-  ],
-  outbase: "./servers",
-  outdir: "./build",
-  plugins: [
-    BitburnerPlugin({
-      port: 12525,
-      types: 'NetscriptDefinitions.d.ts',
-      extensions: [customExtension]
-    })
-  ],
-  bundle: true,
-  format: 'esm',
-  platform: 'browser',
-  logLevel: 'info'
-});
-
-let ctx = await createContext();
-ctx.watch();
-
-```
-
-## Remote Debugging
-
-This tool supports remote debugging for both the Steam version and the web version running in a Chrome/Chromium browser.
-
-```js
-const createContext = async () => await context({
-  entryPoints: [
-    'servers/**/*.js',
-    'servers/**/*.jsx',
-    'servers/**/*.ts',
-    'servers/**/*.tsx',
-  ],
-  outbase: "./servers",
-  outdir: "./build",
-  plugins: [
-    BitburnerPlugin({
-      port: 12525,
-      types: 'NetscriptDefinitions.d.ts',
-      remoteDebugging: true
-    })
-  ],
-  bundle: true,
-  format: 'esm',
-  platform: 'browser',
-  logLevel: 'info'
-});
-
-const ctx = await createContext();
-ctx.watch();
-```
-
-### Steam
-
-To enable remote debugging for the Steam version go into the properties for Bitburner (little cogwheel to the right when viewing Bitburner in your library) and add the following launch option `--remote-debugging-port=9222`.
-
-### Chrome/Chromium
-
-To enable remote debugging for your browser you need to launch it over the commandline like so:
-
-```sh
-<path-to-chrome> --remote-debugging-port=9222
-```
+A simple script to tell you maximum threads your home system can use on a specific script.
